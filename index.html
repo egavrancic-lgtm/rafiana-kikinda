@@ -460,6 +460,8 @@ body.modal-open{overflow:hidden}
 @keyframes reveal{to{clip-path:inset(0 0 0 0)}}
 @keyframes draw{to{stroke-dashoffset:0}}
 
+.mail-toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);z-index:120;background:var(--cream);color:var(--brown);font:500 .95rem/1.4 var(--f-body);padding:12px 20px;border-radius:999px;box-shadow:0 14px 34px -14px rgba(58,36,29,.55);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s;max-width:calc(100% - 32px);text-align:center}
+.mail-toast.is-on{opacity:1;transform:translate(-50%,0)}
 /* ---------- Footer responsive ---------- */
 @media (max-width:1024px){.footer__top{grid-template-columns:1fr 1fr}}
 @media (max-width:560px){.footer__top{grid-template-columns:1fr;gap:36px}}
@@ -928,7 +930,7 @@ body.modal-open{overflow:hidden}
           <li>Moše Pijade bb, Jarkovci</li>
           <li><a href="tel:+381692209063">069/220 90 63</a></li>
           <li><a href="tel:+38162556236">062/556 236</a></li>
-          <li><a href="mailto:info@rafiana.rs">info@rafiana.rs</a></li>
+          <li><a href="mailto:info@rafiana.rs" class="js-mail">info@rafiana.rs</a></li>
           <li><a href="https://www.rafiana.rs" target="_blank" rel="noopener">www.rafiana.rs</a></li>
         </ul>
       </div>
@@ -938,6 +940,7 @@ body.modal-open{overflow:hidden}
       <span>Created with ♡ by <a href="https://monikalevai.com/" target="_blank" rel="noopener">Monika Levai</a></span>
     </div>
   </div>
+  <div class="mail-toast" id="mailToast" role="status" aria-live="polite"></div>
 </footer>
 
 <script>
@@ -984,6 +987,21 @@ body.modal-open{overflow:hidden}
   if(!('IntersectionObserver' in window)){return}
   var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('is-in');io.unobserve(e.target)}})},{threshold:.18,rootMargin:'0px 0px -40px 0px'});
   els.forEach(function(el){io.observe(el)});
+})();
+
+/* ---------- E-mail: mailto + kopiranje adrese (ako na uređaju nije podešen program za poštu) ---------- */
+(function(){
+  var toast=document.getElementById('mailToast'),timer;
+  function show(msg){toast.textContent=msg;toast.classList.add('is-on');clearTimeout(timer);timer=setTimeout(function(){toast.classList.remove('is-on')},3200)}
+  function fallbackCopy(txt){var ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta)}
+  document.querySelectorAll('.js-mail').forEach(function(a){
+    a.addEventListener('click',function(){
+      var mail=a.getAttribute('href').replace('mailto:','');
+      var done=function(){show('E-mail adresa je kopirana: '+mail)};
+      if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(mail).then(done,function(){fallbackCopy(mail);done()})}else{fallbackCopy(mail);done()}
+      // mailto se i dalje otvara normalno (ne sprečavamo podrazumevano ponašanje)
+    });
+  });
 })();
 </script>
 </body>
